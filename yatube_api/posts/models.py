@@ -33,7 +33,7 @@ class Post(models.Model):
     )
 
     class Meta:
-        ordering = ['-pub_date']
+        ordering = ['id']
 
     def __str__(self):
         return self.text
@@ -57,11 +57,11 @@ class Follow(models.Model):
         User, on_delete=models.CASCADE, related_name='follower'
     )
     following = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name='following', null=True, blank=True
+        User, on_delete=models.CASCADE, related_name='following'
     )
 
     class Meta:
-        ordering = ['-following']
+        ordering = ['-user']
         constraints = [
             models.UniqueConstraint(fields=['user', 'following'],
                                     name='unique_users')

@@ -9,6 +9,11 @@ class Group(models.Model):
     slug = models.SlugField('URL', unique=True)
     description = models.TextField('Описание')
 
+    class Meta:
+        ordering = ['id']
+        verbose_name = 'Group'
+        verbose_name_plural = 'Groups'
+
     def __str__(self):
         return self.title
 
@@ -34,9 +39,11 @@ class Post(models.Model):
 
     class Meta:
         ordering = ['id']
+        verbose_name = 'Post'
+        verbose_name_plural = 'Posts'
 
     def __str__(self):
-        return self.text
+        return f'{self.text[:15]} ...'
 
 
 class Comment(models.Model):
@@ -50,6 +57,14 @@ class Comment(models.Model):
     created = models.DateTimeField(
         'Дата добавления', auto_now_add=True, db_index=True
     )
+
+    class Meta:
+        ordering = ['-created']
+        verbose_name = 'Comment'
+        verbose_name_plural = 'Comments'
+
+    def __str__(self):
+        return f'{self.text[:15]} ...'
 
 
 class Follow(models.Model):

@@ -1,23 +1,23 @@
 from django.shortcuts import get_object_or_404
 
-from rest_framework import viewsets, filters, pagination, mixins, permissions
-
+from rest_framework import filters, mixins, pagination, permissions, viewsets
 from posts.models import Group, Post
 from .serializers import (CommentSerializer,
                           FollowSerializer,
                           GroupSerializer,
                           PostSerializer)
-from .permissions import AuthorOrReadOnly, ReadOnly
+from .permissions import AuthorOrReadOnly
+
+
+class ListCreateViewSet(mixins.CreateModelMixin,
+                        mixins.ListModelMixin,
+                        viewsets.GenericViewSet):
+    pass
 
 
 class GroupViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Group.objects.all()
     serializer_class = GroupSerializer
-
-    def get_permissions(self):
-        if self.action in ['list', 'retrieve']:
-            return (ReadOnly(),)
-        return super().get_permissions()
 
 
 class PostViewSet(viewsets.ModelViewSet):
@@ -28,11 +28,6 @@ class PostViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
-
-    def get_permissions(self):
-        if self.action == 'retrieve':
-            return (ReadOnly(),)
-        return super().get_permissions()
 
 
 class CommentViewSet(viewsets.ModelViewSet):
@@ -51,22 +46,17 @@ class CommentViewSet(viewsets.ModelViewSet):
         serializer.save(author=self.request.user,
                         post=post)
 
-    def get_permissions(self):
-        if self.action == 'retrieve':
-            return (ReadOnly(),)
-        return super().get_permissions()
 
-
-class FollowViewSet(mixins.CreateModelMixin,
-                    mixins.ListModelMixin,
-                    viewsets.GenericViewSet):
+class FollowViewSet(ListCreateViewSet):
     serializer_class = FollowSerializer
     permission_classes = (permissions.IsAuthenticated,)
     filter_backends = (filters.SearchFilter,)
     search_fields = ('user__username', 'following__username')
 
     def get_queryset(self):
-        new_queryset = self.request.user.follower.all()
+        new_queryset = self.request.user.follower.select_related(
+            'user', 'following'
+        ).all()
         return new_queryset
 
     def perform_create(self, serializer):
